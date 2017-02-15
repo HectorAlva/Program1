@@ -53,7 +53,7 @@ public void run()
       OutputStream os = socket.getOutputStream();
       String link = readHTTPRequest(is);
       link = link.substring(1);
-      String fileType = path.substring(path.indexOf(".")+1, path.length());
+      String fileType = link.substring(link.indexOf(".")+1, link.length());
       if(fileType.equals("jpeg"))
          writeHTTPHeader(os,"image/jpeg", link);
       else if(fileType.equals("gif"))
@@ -79,7 +79,6 @@ private String readHTTPRequest(InputStream is)
 {
    String line;
    String linkSaver= "";
-   String link = "";
    String holdGet= "";
    BufferedReader r = new BufferedReader(new InputStreamReader(is));
    while (true) {
@@ -149,12 +148,13 @@ private void writeContent(OutputStream os, String link, String fileType) throws 
     if(fileType.equals("jpeg") || fileType.equals("gif") || fileType.equals("png") ){
        File myFile = new File(link);
        FileInputStream is = new FileInputStream(myFile);
-       byte[] data = new byte[(int) file.length()];
+       byte[] data = new byte[(int) Myfile.length()];
        is.read(data);
        is.close();
        DataOutputStream dataOS = new DataOutputStream(os);
        dataOS.write(data);
        dataOS.close();
+       reader.close();
     }
     else{
     while((line = reader.readLine()) != null){
