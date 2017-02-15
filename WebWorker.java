@@ -27,8 +27,7 @@ import java.util.*;
 import java.text.*;
 
 
-public class WebWorker implements Runnable
-{
+public class WebWorker implements Runnable{
 
 private Socket socket;
 
@@ -54,8 +53,16 @@ public void run()
       OutputStream os = socket.getOutputStream();
       String link = readHTTPRequest(is);
       link = link.substring(1);
-      writeHTTPHeader(os,"text/html", link);
-      writeContent(os, link);
+      String fileType = path.substring(path.indexOf(".")+1, path.length());
+      if(fileType.equals("jpeg"))
+         writeHTTPHeader(os,"image/jpeg", link);
+      else if(fileType.equals("gif"))
+         writeHTTPHeader(os,"image/gif", link);
+      else if(fileType.equals("png"))
+         writeHTTPHeader(os,"image/png", link);
+      else if(fileType.equals("html"))
+         writeHTTPHeader(os,"text/html", link);
+      writeContent(os, link, fileType);
       os.flush();
       socket.close();
    } catch (Exception e) {
@@ -101,7 +108,8 @@ private String readHTTPRequest(InputStream is)
 * @param os is the OutputStream object to write to
 * @param contentType is the string MIME content type (e.g. "text/html")
 **/
-private void writeHTTPHeader(OutputStream os, String contentType, String link) throws Exception{
+private void writeHTTPHeader(OutputStream os, String contentType, String link) throws Exception
+{
    Date d = new Date();
    DateFormat df = DateFormat.getDateTimeInstance();
    df.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -122,7 +130,7 @@ private void writeHTTPHeader(OutputStream os, String contentType, String link) t
    else{
         os.write("404 file not found ".getBytes());}  
    return;
-   }
+ }
 
 
 /**
@@ -130,7 +138,7 @@ private void writeHTTPHeader(OutputStream os, String contentType, String link) t
 * be done after the HTTP header has been written out.
 * @param os is the OutputStream object to write to
 **/
-private void writeContent(OutputStream os, String link) throws Exception
+private void writeContent(OutputStream os, String link, String fileType) throws Exception
 {
   try{
     BufferedReader reader = new BufferedReader(new FileReader(link));
@@ -138,6 +146,17 @@ private void writeContent(OutputStream os, String link) throws Exception
     Date d = new Date();
     DateFormat dateform = DateFormat.getDateTimeInstance();
     dateform.setTimeZone(TimeZone.getTimeZone("GMT"));
+    if(fileType.equals("jpeg") || fileType.equals("gif") || fileType.equals("png") ){
+       File myFile = new File(link);
+       FileInputStream is = new FileInputStream(myFile);
+       byte[] data = new byte[(int) file.length()];
+       is.read(data);
+       is.close();
+       DataOutputStream dataOS = new DataOutputStream(os);
+       dataOS.write(data);
+       dataOS.close();
+    }
+    else{
     while((line = reader.readLine()) != null){
       if(line.equals("<cs371date>")){
         os.write("<reader>".getBytes());
@@ -151,6 +170,7 @@ private void writeContent(OutputStream os, String link) throws Exception
       }
       os.write(line.getBytes());
     }}
+  }
   
    catch(FileNotFoundException exception){
    os.write("\n".getBytes());
